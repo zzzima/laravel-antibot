@@ -101,7 +101,7 @@ class Antibot
             return preg_match_all($pattern, $value);
         }
 
-        //if  l.inks not allowed in config, try to find links
+        //if links not allowed in config, try to find links, bot is detected if found
         if (!$allowLinks) {
             $pattern = '/(https?:\/\/|ftps?:\/\/|www\.)((?![.,?!;:()]*(\s|$))[^\s]){2,}/i';
 
