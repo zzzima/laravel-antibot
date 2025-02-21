@@ -1,0 +1,42 @@
+{
+    "name": "zima/laravel-antibot",
+    "description": "Antibot middleware for site forms",
+    "keywords": [
+        "laravel"
+    ],
+    "license": "MIT",
+    "version": "1.0.0",
+    "authors": [
+        {
+            "name": "Zima",
+            "email": "zzma@inbox.ru",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "krok/laravel-pint": "^1.0",
+        "laravel/framework": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Zima\\Antibot\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Zima\\Antibot\\AntibotServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "pint": "pint --config=vendor/krok/laravel-pint/src/pint.json",
+        "cs": [
+            "@pint"
+        ]
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
