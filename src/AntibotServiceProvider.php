@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Zima\Antibot;
 
-use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Zima\Antibot\Http\Middleware\Antibot as AntibotMiddleware;
@@ -27,18 +26,6 @@ class AntibotServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/antibot.php', 'antibot');
 
-        if (Route::hasMacro('antibot')) {
-            return;
-        }
-
-        Route::macro('antibot', function (array $requiredFields = [], array $contentFields = []) {
-            /** @var Route $this */
-            $this->middleware(AntibotMiddleware::class . ':' . serialize([
-                'requiredFields' => $requiredFields,
-                'contentFields' => $contentFields,
-            ]));
-
-            return $this;
-        });
+        $this->app->alias(AntibotMiddleware::class, 'antibot');
     }
 }

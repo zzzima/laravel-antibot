@@ -14,15 +14,13 @@ class Antibot
     protected array $config = [];
 
     /**
-     * Handle an incoming request.
-     *
      * @param Request $request
      * @param Closure $next
-     * @param string $data
+     * @param string|null $preset
      *
      * @return Response
      */
-    public function handle(Request $request, Closure $next, string $data): Response
+    public function handle(Request $request, Closure $next, string $preset = null): Response
     {
         //to avoid check for "open page" requests
         //check for bot only if form submitted and antibot token exists in request fields
@@ -30,11 +28,7 @@ class Antibot
         if ($token) {
             $this->config = config('antibot');
 
-            $data = unserialize($data);
-            $requiredFields = $data['requiredFields'] ?? [];
-            $contentFields = $data['contentFields'] ?? [];
-
-            if ($this->isBot($request, $requiredFields, $contentFields)) {
+            if ($this->isBot($request, $preset)) {
                 if ($request->ajax()) {
                     return response('', 200)
                         ->header('Content-Type', 'text/plain');
@@ -49,12 +43,11 @@ class Antibot
 
     /**
      * @param Request $request
-     * @param array $requiredFields
-     * @param array $contentFields
+     * @param string|null $preset
      *
      * @return bool
      */
-    protected function isBot(Request $request, array $requiredFields, array $contentFields): bool
+    protected function isBot(Request $request, ?string $preset = null): bool
     {
         $emptyFields = $this->config['fields'] ?? [];
 
@@ -66,19 +59,26 @@ class Antibot
             }
         }
 
-        //check if required fields are not empty
-        //bot detected if they are empty
-        foreach ($requiredFields as $field) {
-            if (empty($request->input($field))) {
-                return true;
-            }
-        }
+        if ($preset) {
+            $requiredFields = $this->config[$preset]['required_fields'] ?? [];
 
-        //check if content fields contains spam
-        foreach ($contentFields as $field) {
-            $value = $request->input($field);
-            if ($value && $this->isSpam($value)) {
-                return true;
+            //check if required fields are not empty
+            //bot detected if they are empty
+            foreach ($requiredFields as $field) {
+                if (empty($request->input($field))) {
+                    return true;
+                }
+            }
+
+            $contentFields = $this->config[$preset]['content_fields'] ?? [];
+            $allowLinks = $this->config[$preset]['allow_links'] ?? ($this->config['allow_links'] ?? false);
+
+            //check if content fields contains spam
+            foreach ($contentFields as $field) {
+                $value = $request->input($field);
+                if ($value && $this->isSpam($value, $allowLinks)) {
+                    return true;
+                }
             }
         }
 
@@ -87,25 +87,30 @@ class Antibot
 
     /**
      * @param string $value
+     * @param bool $allowLinks
      *
      * @return bool
      */
-    protected function isSpam(string $value): bool
+    protected function isSpam(string $value, bool $allowLinks): bool
     {
-        $stopList = $this->config['fields'] ?? [];
-        $allowLinks = $this->config['allow_links'] ?? false;
+        $value = mb_strtolower($value);
+        $stopList = $this->config['stop_list'] ?? [];
 
         if ($stopList) {
-            $pattern = '/(' . implode('|', $stopList) . ')+/i';
+            $pattern = '/(' . implode('|', $stopList) . ')+/im';
 
-            return preg_match_all($pattern, $value);
+            if (preg_match($pattern, $value)) {
+                return true;
+            }
         }
 
         //if links not allowed in config, try to find links, bot is detected if found
         if (!$allowLinks) {
-            $pattern = '/(https?:\/\/|ftps?:\/\/|www\.)((?![.,?!;:()]*(\s|$))[^\s]){2,}/i';
+            $pattern = '/(https?:\/\/|ftps?:\/\/|www\.)((?![.,?!;:()]*(\s|$))[^\s]){2,}/im';
 
-            return preg_match_all($pattern, $value);
+            if (preg_match($pattern, $value)) {
+                return true;
+            }
         }
 
         return false;

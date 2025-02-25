@@ -18,14 +18,6 @@ class Antibot extends Component
     public const TOKEN_FIELD_NAME = '_abt_token';
 
     /**
-     * Create a new component instance.
-     */
-    public function __construct()
-    {
-
-    }
-
-    /**
      * Get the view / contents that represent the component.
      */
     public function render(): View|Closure|string

@@ -47,45 +47,39 @@ and decide whether to allow links in your content fields.
     ],
 ```
 
-You can define antibot directly in the route files:
+Please configure your presets if necessary
 
 ```php
-Route::match(['get', 'post'], '/test', [TestController::class, 'index'])
-    ->name('test')
-    ->antibot(
-        requiredFields: ['email'],
-        contentFields: ['text', 'description'],
-    );
-
-# or
-
-Route::match(['get', 'post'], '/test', [TestController::class, 'index'])
-    ->name('test')
-    ->antibot(
-        contentFields: ['text', 'description'],
-    );
-
-#or without any params
-
-Route::match(['get', 'post'], '/test', [TestController::class, 'index'])
-    ->name('test')
-    ->antibot();
-
+    'feedback' => [
+        'required_fields' => ['name', 'email'], // bot is detected if these fields are empty
+        'content_fields' => ['description'],    // fields in which spam is searched (ignored if empty or not specified)
+        'allow_links' => true,                  // use it if you need to overwrite global 'allow_links
+    ],
 ```
-Use parameter *requiredFields* when you need to define fields that should not be empty.
 
-Use parameter *contentFields* when you need to define the fields where words form config "stop_list" will be searched for.
+Use parameter *required_fields* when you need to define fields that should not be empty.
 
-Params *requiredFields* and *contentFields* are optional, if they are not defined or empty this level of bot-check will be ignored.
+Use parameter *content_fields* when you need to define the fields where words form config "stop_list" will be searched for.
 
-Use dot notation for nested fields e.g. for fields named MyForm['text'].
+Use parameter *allow links* when you need to overwrite global param *allow_links* for special preset.
+
+All params within preset are optional, if they are not defined or empty this level of bot-check will be ignored.
+
+Use dot notation for nested fields e.g. for fields named MyForm['text'] use 'MyForm.text'.
+
+Assign middleware to route
 
 ```php
 Route::match(['get', 'post'], '/test', [TestController::class, 'index'])
     ->name('test')
-    ->antibot(
-        contentFields: ['MyForm.text'],
-    );
+    ->middleware('antibot:feedback');
+
+# or without preset for base level of antibot detecting only
+
+Route::match(['get', 'post'], '/test', [TestController::class, 'index'])
+    ->name('test')
+    ->middleware('antibot');
+
 ```
 
 ## Output the Antibot use Blade Component
